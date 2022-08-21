@@ -1,20 +1,70 @@
 import { useEffect, useState } from "react";
 import Todo from "../components/Todo";
-import {
-  IconCheck,
-  IconTrash,
-  IconArrowUp,
-  IconArrowDown,
-} from "@tabler/icons";
 
 export default function Home() {
-  const deleteTodo = (idx) => {};
+  const [todolist, setTodo] = useState([]);
 
-  const markTodo = (idx) => {};
+  useEffect(() => {
+    const todosStr = localStorage.getItem("react-todos");
+    if (!todosStr) setTodo([]);
+    else setTodo(JSON.parse(todosStr));
+  }, []);
 
-  const moveUp = (idx) => {};
+  const [isFirstRender, setIsFirstRender] = useState(true);
 
-  const moveDown = (idx) => {};
+  useEffect(() => {
+    if (isFirstRender) {
+      setIsFirstRender(false);
+      return;
+    }
+    saveTodos();
+  }, [todolist]);
+
+  const saveTodos = () => {
+    const todosStr = JSON.stringify(todolist);
+    localStorage.setItem("react-todos", todosStr);
+  };
+
+  const deleteTodo = (idx) => {
+    todolist.splice(idx, 1);
+    const newTodolist = [...todolist];
+    setTodo(newTodolist);
+  };
+
+  const markTodo = (idx) => {
+    todolist[idx].complete = !todolist[idx].complete;
+    setTodo([...todolist]);
+  };
+
+  const moveUp = (idx) => {
+    if (idx === 0) return;
+    let temp = todolist[idx];
+    todolist[idx] = todolist[idx - 1];
+    todolist[idx - 1] = temp;
+    setTodo([...todolist]);
+  };
+
+  const moveDown = (idx) => {
+    if (idx === todolist.length -1) return;
+    let temp = todolist[idx];
+    todolist[idx] = todolist[idx + 1];
+    todolist[idx + 1] = temp;
+    setTodo([...todolist]);
+  };
+
+  const addTodo = (data, completed) => {
+    setTodo([{ data: data, completed }, ...todolist]);
+  };
+
+  const onKeyUpCheck = (event) => {
+    if (event.key !== "Enter") return;
+    if (event.target.value === "") {
+      alert("Todo cannot be empty");
+      return;
+    }
+    addTodo(event.target.value, false);
+    event.targeyt.value = "";
+  };
 
   return (
     <div>
@@ -28,40 +78,37 @@ export default function Home() {
         <input
           className="form-control mb-1 fs-4"
           placeholder="insert todo here..."
+          onKeyUp={onKeyUpCheck}
         />
         {/* Todos */}
-        {/* Example 1 */}
-        <div className="border-bottom p-1 py-2 fs-2 d-flex gap-2">
-          <span className="me-auto">Todo</span>
-        </div>
-        {/* Example 2 */}
-        <div className="border-bottom p-1 py-2 fs-2 d-flex gap-2">
-          <span className="me-auto">Todo with buttons</span>
-
-          <button className="btn btn-success">
-            <IconCheck />
-          </button>
-          <button className="btn btn-secondary">
-            <IconArrowUp />
-          </button>
-          <button className="btn btn-secondary">
-            <IconArrowDown />
-          </button>
-          <button className="btn btn-danger">
-            <IconTrash />
-          </button>
-        </div>
+        {todolist.map((element, id) => (
+          <Todo
+            title={element.data}
+            completed={element.completed}
+            key={id}
+            onMoveUp={() => moveUp(id)}
+            onMoveDown={() => moveDown(id)}
+            onDelete={() => deleteTodo(id)}
+            onMark={() => markTodo(id)}
+          />
+        ))}
 
         {/* summary section */}
         <p className="text-center fs-4">
-          <span className="text-primary">All (2) </span>
-          <span className="text-warning">Pending (2) </span>
-          <span className="text-success">Completed (0)</span>
+          <span className="text-primary">All ({todolist.length}) </span>
+          <span className="text-warning">
+            Pending ({todolist.filter((elem) => elem.completed == false).length}
+            ){" "}
+           </span>
+          <span className="text-success">
+            Completed (
+              {todolist.filter((elem) => elem.completed == true).length})
+              </span>
         </p>
 
         {/* Made by section */}
         <p className="text-center mt-3 text-muted fst-italic">
-          made by Chayanin Suatap 12345679
+          made by Aumboon Naewsuk 640612197
         </p>
       </div>
     </div>
